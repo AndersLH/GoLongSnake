@@ -7,6 +7,17 @@ import (
 	"strings"
 )
 
+type player struct {
+	Username string `json:"username"`
+	X        int    `json:"x"`
+	Y        int    `json:"y"`
+}
+
+type board struct {
+	Size    int      `json:"size"`
+	Players []player `json:players`
+}
+
 type snake struct {
 	Name      string `json:"name"`
 	Direction string `json:"direction"`
@@ -30,8 +41,18 @@ func SortRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func createUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("cu")
+}
+
 func getBoard(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get")
+}
+
+func inititalizeBoard(w http.ResponseWriter, r *http.Request) {
+	var board board
+	customhttp.Decode(r, &board)
+
 }
 
 func moveSnake(w http.ResponseWriter, r *http.Request) {

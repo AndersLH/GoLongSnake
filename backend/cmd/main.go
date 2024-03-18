@@ -31,11 +31,9 @@ func main() {
 	log.Println("Server running on port " + port)
 	http.HandleFunc("/start", handlers.SortRequest)
 
-	// HTTPS
-	// err = http.ListenAndServeTLS(":"+port, "cert.pem", "key.pem", router(hc))
+	// HTTP
 	err := http.ListenAndServe("localhost:"+port, nil)
 	if err != nil {
 		log.Fatal("Failed server launch:", err)
 	}
-
 }
