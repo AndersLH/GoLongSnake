@@ -61,16 +61,19 @@ func moveSnake(w http.ResponseWriter, r *http.Request) {
 
 	//ensure lowercase
 	snakeUser.Direction = strings.ToLower(snakeUser.Direction)
-	//TODO add logic for less than 0 or more than maximum. teleport around?
+	//TODO add logic for less than 0 or more than maximum. teleport on border?
 	switch snakeUser.Direction {
-	case "u":
-		snakeUser.Y += 1
-	case "d":
+	case "arrowup":
 		snakeUser.Y -= 1
-	case "r":
+	case "arrowdown":
+		snakeUser.Y += 1
+	case "arrowright":
 		snakeUser.X += 1
-	case "l":
+	case "arrowleft":
 		snakeUser.X -= 1
+	default:
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
 	}
 
 	fmt.Println(snakeUser)

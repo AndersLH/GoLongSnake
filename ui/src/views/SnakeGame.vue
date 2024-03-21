@@ -26,35 +26,10 @@
                     v-model="this.snake.name"
             />
             
-            <v-card style="width:fit-content">
-                <v-icon
-                    size="small"
-                    @click="update('u')"
-                    >
-                    mdi-arrow-up
-                </v-icon>
-                <v-icon
-                    size="small"
-                    @click="update('d')"
-                    >
-                    mdi-arrow-down
-                </v-icon>
-                <v-icon
-                    size="small"
-                    @click="update('l')"
-                    >
-                    mdi-arrow-left
-                </v-icon>
-                <v-icon
-                    size="small"
-                    @click="update('r')"
-                    >
-                    mdi-arrow-right
-                </v-icon>
-            </v-card>
+                
             <v-container class="grid">
                 <v-row v-for="column, row in grid" :key="row">
-                    <v-col v-for="cell, i in column" :key="i" class="gridCell">
+                    <v-col v-for="cell, i in column" :key="i" class="gridCell" :id="[row + '-' + i]">
                         <div>{{cell}}</div>
                     </v-col>
                 </v-row>
@@ -72,7 +47,10 @@
         name: 'App',
         components: {},
         data: () => ({
-            gridSize: 8, 
+            gridSize: {
+                x: 16,
+                y: 8,
+            }, 
             grid: [[]],
             snake: {
                 name: "user01",
@@ -80,14 +58,36 @@
                 x: 0,
                 y: 0,
             },
+            snakecss: "#ffffff",
+            backgroundcss: "#000000",
         }),
+        mounted: function () {
+            // add an event listener for keypress
+            window.addEventListener('keydown', this.handleKeyPress)
+        },
 
         methods: {
+            //Read keypress by user
+            handleKeyPress: function (e) {
+                const keyCode = String(e.key).toLowerCase();
+                if (keyCode == "arrowup" || keyCode == "arrowdown" || keyCode == "arrowleft" || keyCode == "arrowright"){
+                    this.update(keyCode)
+                }
+            },
+            //Send update request to backend
             update: async function(dir) {
                 this.snake.direction = dir
                 changeName(this.snake)
+                    //HTTP response
                     .then((response)=>{
+                        //Set previous to white
+                        document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
+
+                        //Set snake to S
                         this.snake = response;
+                        this.grid[this.snake.y][this.snake.x] = "S"
+                        //Set current to red
+                        document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "red";
                     })
                     .catch(()=>{console.log("Something went wrong")})
                     .finally()
@@ -95,10 +95,10 @@
         },
         created(){
             //Request board size from server
-            for(let x = 0; x < this.gridSize; x++){
-                this.grid[x] = []
-                for(let y = 0; y < this.gridSize; y++){
-                    this.grid[x][y] = "0"
+            for(let y = 0; y < this.gridSize.y; y++){
+                this.grid[y] = []
+                for(let x = 0; x < this.gridSize.x; x++){
+                    this.grid[y][x] = "0"
                 }
             }
         },
