@@ -7,15 +7,18 @@ import (
 	"strings"
 )
 
+const GRIDX int = 16
+const GRIDY int = 10
+
+type grid struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
 type player struct {
 	Username string `json:"username"`
 	X        int    `json:"x"`
 	Y        int    `json:"y"`
-}
-
-type board struct {
-	Size    int      `json:"size"`
-	Players []player `json:players`
 }
 
 type snake struct {
@@ -32,7 +35,7 @@ func SortRequest(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		getBoard(w, r)
+		getGridSize(w, r)
 	case http.MethodPost:
 		moveSnake(w, r)
 	default:
@@ -41,27 +44,20 @@ func SortRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("cu")
-}
-
-func getBoard(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("get")
-}
-
-func inititalizeBoard(w http.ResponseWriter, r *http.Request) {
-	var board board
-	customhttp.Decode(r, &board)
-
+func getGridSize(w http.ResponseWriter, r *http.Request) {
+	var grid grid
+	grid.X = GRIDX
+	grid.Y = GRIDY
+	customhttp.Encode(w, &grid)
 }
 
 func moveSnake(w http.ResponseWriter, r *http.Request) {
 	var snakeUser snake
 	customhttp.Decode(r, &snakeUser)
 
-	//ensure lowercase
+	//Ensure lowercase
 	snakeUser.Direction = strings.ToLower(snakeUser.Direction)
-	//TODO add logic for less than 0 or more than maximum. teleport on border?
+
 	switch snakeUser.Direction {
 	case "arrowup":
 		snakeUser.Y -= 1
@@ -76,12 +72,22 @@ func moveSnake(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	switch {
+	case snakeUser.X >= GRIDX:
+		snakeUser.X = 0
+	case snakeUser.X < 0:
+		snakeUser.X = GRIDX - 1
+	}
+
+	switch {
+	case snakeUser.Y >= GRIDY:
+		snakeUser.Y = 0
+	case snakeUser.Y < 0:
+		snakeUser.Y = GRIDY - 1
+	}
+
 	fmt.Println(snakeUser)
 	customhttp.Encode(w, &snakeUser)
-	// if snakeUser.Name == "" {
-	// 	http.Error(w, "Dataset name can not be blank", http.StatusNotAcceptable)
-	// 	return
-	// }
 }
 
 func cors(w http.ResponseWriter, r *http.Request) bool {

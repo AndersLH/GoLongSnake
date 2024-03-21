@@ -41,15 +41,15 @@
 </template>
 
 <script>
-    import {changeName} from '@/http/http';
+    import {changeName, initBoard} from '@/http/http';
     export default {
 
         name: 'App',
         components: {},
         data: () => ({
             gridSize: {
-                x: 16,
-                y: 8,
+                x: 0,
+                y: 0,
             }, 
             grid: [[]],
             snake: {
@@ -92,15 +92,27 @@
                     .catch(()=>{console.log("Something went wrong")})
                     .finally()
             },
+            getSize: async function(){
+                //
+                initBoard()
+                    .then((response)=>{
+                        this.gridSize = response;
+                    })
+                    .catch(()=>{console.log("Something went wrong")})
+                    .finally(()=>{
+                        //Initialize board
+                        for(let y = 0; y < this.gridSize.y; y++){
+                            this.grid[y] = []
+                            for(let x = 0; x < this.gridSize.x; x++){
+                                this.grid[y][x] = "0"
+                            }
+                        }
+                    })
+            }
         },
         created(){
-            //Request board size from server
-            for(let y = 0; y < this.gridSize.y; y++){
-                this.grid[y] = []
-                for(let x = 0; x < this.gridSize.x; x++){
-                    this.grid[y][x] = "0"
-                }
-            }
+            //Request board size 
+            this.getSize()        
         },
     }
 </script>

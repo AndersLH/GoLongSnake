@@ -18,6 +18,6 @@ startApi();
 
 
 // Authentication
-// export const getExample = (params) => {return api.get('/somepath/', {params})} // Remember the curly braces for URL param-unfolding
 export const changeName = (payload) => {return api.post('/start', payload)}
+export const initBoard = (payload) => {return api.get('/start', {payload})}
 
