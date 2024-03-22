@@ -53,15 +53,22 @@
             }, 
             grid: [[]],
             snake: {
-                name: "user01",
+                username: "user01",
+                id: null,
                 direction: "",
                 x: 0,
                 y: 0,
+                other: null,
             },
-            snakecss: "#ffffff",
-            backgroundcss: "#000000",
+            connected: false,
+            wscon: WebSocket.prototype,
         }),
         mounted: function () {
+            
+            this.joinGame()
+            this.getSize()
+
+            
             // add an event listener for keypress
             window.addEventListener('keydown', this.handleKeyPress)
         },
@@ -84,7 +91,8 @@
                         document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
 
                         //Set snake to S
-                        this.snake = response;
+                        this.snake.x = response.x;
+                        this.snake.y = response.y;
                         this.grid[this.snake.y][this.snake.x] = "S"
                         //Set current to red
                         document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "red";
@@ -108,11 +116,51 @@
                             }
                         }
                     })
+            },
+            joinGame(){
+
+                const host = process.env.NODE_ENV === 'development' ? "localhost:8080" : window.location.host;
+                const url = `ws://${host}/ws`
+
+                this.wscon = new WebSocket( url );
+                //Console log for ws connection
+                // this.ws.addEventListener('open', (event) => { console.log("Connected :D") });
+
+                this.wscon.onclose = function() {
+                    console.log("disconnected from ws!")
+                }
+
+                this.wscon.onmessage = function(e){
+                    console.log(e.data)
+                    this.handleMessage(e.data)
+                }.bind(this);
+
+                this.wscon.onerror = function(e){
+                    console.log("ERROR", e)
+                }
+            },
+            handleMessage(msg){
+                try{ msg = JSON.parse(msg) }catch(e){ return }
+
+                switch(msg.msgtype){
+                    case "initplayer": this.snake = msg.msgdata; break;
+                    case "move": this.updateOther(msg.msgdata); break;
+                    case "hola": console.log("hype"); break;
+                    default:
+                        // this.$refs.game.handleMessage(msg)
+                        console.log("def")
+                }
+            },
+            updateOther(data){
+                if (this.snake.id != data.other) {
+                    console.log("other")
+                }
             }
         },
-        created(){
-            //Request board size 
-            this.getSize()        
-        },
+        // created(){
+        //     //Request board size 
+        //     // this.joinGame()
+        //     this.getSize()        
+        // },
     }
 </script>

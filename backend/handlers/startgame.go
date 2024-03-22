@@ -10,15 +10,12 @@ import (
 const GRIDX int = 16
 const GRIDY int = 10
 
+// Client represents the websocket client at the server
+
+// Grid size
 type grid struct {
 	X int `json:"x"`
 	Y int `json:"y"`
-}
-
-type player struct {
-	Username string `json:"username"`
-	X        int    `json:"x"`
-	Y        int    `json:"y"`
 }
 
 type snake struct {
@@ -48,6 +45,7 @@ func getGridSize(w http.ResponseWriter, r *http.Request) {
 	var grid grid
 	grid.X = GRIDX
 	grid.Y = GRIDY
+
 	customhttp.Encode(w, &grid)
 }
 
@@ -87,14 +85,24 @@ func moveSnake(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println(snakeUser)
+
+	for _, p := range playerList {
+		_ = p.conn.WriteJSON(
+			ClientMsg{
+				MsgType: "move",
+				MsgData: "Just joined: "},
+		)
+	}
+
 	customhttp.Encode(w, &snakeUser)
+
 }
 
 func cors(w http.ResponseWriter, r *http.Request) bool {
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS") // Allow all methods
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")                    // Allow content-type header
-	w.Header().Set("Access-Control-Allow-Credentials", "true")                        // Allow credential header
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")            // Allow port 8080 to make requests (where frontend runs in dev mode)
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
 
 	return r.Method == http.MethodOptions // If method is Options, return true to allow logic in handler return early - prevents double work.
 }

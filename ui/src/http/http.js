@@ -16,8 +16,8 @@ function startApi(){
 
 startApi();
 
-
-// Authentication
+//APIs
+// export const joinGame = (payload) => {return api.post('/joingame', payload)}
 export const changeName = (payload) => {return api.post('/start', payload)}
 export const initBoard = (payload) => {return api.get('/start', {payload})}
 

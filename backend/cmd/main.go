@@ -30,6 +30,7 @@ func main() {
 
 	log.Println("Server running on port " + port)
 	http.HandleFunc("/start", handlers.SortRequest)
+	http.HandleFunc("/ws", handlers.ServeWs)
 
 	// HTTP
 	err := http.ListenAndServe("localhost:"+port, nil)
