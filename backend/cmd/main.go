@@ -29,8 +29,9 @@ func main() {
 	}
 
 	log.Println("Server running on port " + port)
-	http.HandleFunc("/start", handlers.SortRequest)
-	http.HandleFunc("/ws", handlers.ServeWs)
+	// http.HandleFunc("/movesnake", handlers.MoveSnake)
+	http.HandleFunc("/newplayer", handlers.NewPlayer)
+	// http.HandleFunc("/getgridsize", handlers.GetGridSize)
 
 	// HTTP
 	err := http.ListenAndServe("localhost:"+port, nil)

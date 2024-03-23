@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"dsproject/backend/structs"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,26 +17,18 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-type Player struct {
-	// The actual websocket connection.
-	conn     *websocket.Conn
-	Username string `json:"username"`
-	Id       int    `json:"id"`
-	X        int    `json:"x"`
-	Y        int    `json:"y"`
-}
+const GRIDX int = 16
+const GRIDY int = 10
 
-type ClientMsg struct {
-	MsgType string      `json:"msgtype"`
-	MsgData interface{} `json:"msgdata"`
-}
-
+// Incrementing player id
 var playerID = 0
-var playerList []Player
+
+// List of players
+var playerList []*structs.Player
 
 // Upgrade HTTP connection to websocket
-func ServeWs(w http.ResponseWriter, r *http.Request) {
-	//Upgrades connection
+func NewPlayer(w http.ResponseWriter, r *http.Request) {
+	//Upgrade to websocket
 	wscon, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -43,33 +36,80 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Make new player
-	player := newPlayer(wscon)
-	playerList = append(playerList, *player)
+	player := structs.Player{
+		Conn: wscon,
+		Id:   playerID,
+	}
+	playerList = append(playerList, &player)
 	playerID += 1
 
-	fmt.Println("New Client joined the hub!")
-	fmt.Println(player)
+	//Set grid size
+	grid := structs.GridSize{
+		X: GRIDX,
+		Y: GRIDY,
+	}
+	//On first player join, initiate grid with size
+	if len(playerList) == 1 {
 
-	//Single player
-	_ = wscon.WriteJSON(
-		ClientMsg{
-			MsgType: "initplayer",
-			MsgData: player},
-	)
-	//All players
-	for _, p := range playerList {
-		_ = p.conn.WriteJSON(
-			ClientMsg{
-				MsgType: "hola",
-				MsgData: "Just joined: " + strconv.Itoa(player.Id)},
-		)
+		startGrid := structs.ClientMsg{
+			MsgType: "initgrid",
+			MsgData: grid,
+		}
+		//Send grid size to player
+		err := player.Conn.WriteJSON(startGrid)
+		if err != nil {
+			return // Maybe do a retry / drop connection here
+		}
+	} else {
+		//If not first player, get board content
+		startGrid := structs.ClientMsg{
+			MsgType: "updategrid",
+			MsgData: grid,
+		}
+		//Send grid size to player
+		err := player.Conn.WriteJSON(startGrid)
+		if err != nil {
+			return // Maybe do a retry / drop connection here
+		}
 	}
 
+	fmt.Println("New Client " + strconv.Itoa(player.Id) + " joined the hub!")
+
+	player.Done = false
+	SocketListener(&player)
 }
 
-func newPlayer(conn *websocket.Conn) *Player {
-	return &Player{
-		conn: conn,
-		Id:   playerID,
+// Listen for messages from players
+func SocketListener(player *structs.Player) {
+	for !player.Done {
+		msg := structs.ClientMsg{}
+		err := player.Conn.ReadJSON(&msg)
+		if err != nil {
+			fmt.Println("errrrrr joinplayer.go")
+			fmt.Println(err)
+			//Remove player after losing connection
+			player.Conn.Close()
+			for i, p := range playerList {
+				if p.Id == player.Id {
+					playerList = append(playerList[:i], playerList[i+1:]...)
+				}
+			}
+			break
+		}
+		messageHandler(player, &msg)
+	}
+}
+
+// Handle messages from players
+func messageHandler(player *structs.Player, msg *structs.ClientMsg) {
+
+	//Handle messages from players
+	switch msg.MsgType {
+	case "move":
+		SnakeMove(player, msg)
+		break
+	default:
+		fmt.Println("default messagehandler")
+		break
 	}
 }

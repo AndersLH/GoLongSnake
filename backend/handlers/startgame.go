@@ -1,101 +1,72 @@
 package handlers
 
 import (
-	customhttp "dsproject/backend/customHTTP"
+	"dsproject/backend/structs"
 	"fmt"
 	"net/http"
-	"strings"
 )
 
-const GRIDX int = 16
-const GRIDY int = 10
-
-// Client represents the websocket client at the server
-
-// Grid size
-type grid struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type snake struct {
-	Name      string `json:"name"`
-	Direction string `json:"direction"`
-	X         int    `json:"x"`
-	Y         int    `json:"y"`
-}
-
-func SortRequest(w http.ResponseWriter, r *http.Request) {
-	if cors(w, r) {
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		getGridSize(w, r)
-	case http.MethodPost:
-		moveSnake(w, r)
-	default:
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-	}
-
-}
-
-func getGridSize(w http.ResponseWriter, r *http.Request) {
-	var grid grid
-	grid.X = GRIDX
-	grid.Y = GRIDY
-
-	customhttp.Encode(w, &grid)
-}
-
-func moveSnake(w http.ResponseWriter, r *http.Request) {
-	var snakeUser snake
-	customhttp.Decode(r, &snakeUser)
-
-	//Ensure lowercase
-	snakeUser.Direction = strings.ToLower(snakeUser.Direction)
-
-	switch snakeUser.Direction {
+// Move snake from player direction
+func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
+	ogX := player.X
+	ogY := player.Y
+	switch msg.MsgData {
 	case "arrowup":
-		snakeUser.Y -= 1
+		player.Y -= 1
 	case "arrowdown":
-		snakeUser.Y += 1
+		player.Y += 1
 	case "arrowright":
-		snakeUser.X += 1
+		player.X += 1
 	case "arrowleft":
-		snakeUser.X -= 1
+		player.X -= 1
 	default:
-		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
+	//Teleport on borders
 	switch {
-	case snakeUser.X >= GRIDX:
-		snakeUser.X = 0
-	case snakeUser.X < 0:
-		snakeUser.X = GRIDX - 1
+	case player.X >= GRIDX:
+		player.X = 0
+	case player.X < 0:
+		player.X = GRIDX - 1
 	}
 
 	switch {
-	case snakeUser.Y >= GRIDY:
-		snakeUser.Y = 0
-	case snakeUser.Y < 0:
-		snakeUser.Y = GRIDY - 1
+	case player.Y >= GRIDY:
+		player.Y = 0
+	case player.Y < 0:
+		player.Y = GRIDY - 1
 	}
 
-	fmt.Println(snakeUser)
-
+	//Collision detection
 	for _, p := range playerList {
-		_ = p.conn.WriteJSON(
-			ClientMsg{
-				MsgType: "move",
-				MsgData: "Just joined: "},
-		)
+		fmt.Println(len(playerList), p.X, p.Y, player.X, player.Y)
+		if p.X == player.X && p.Y == player.Y && p.Id != player.Id {
+			player.X = ogX
+			player.Y = ogY
+			return
+		}
 	}
 
-	customhttp.Encode(w, &snakeUser)
-
+	//New player move
+	newMove := structs.PlayerMove{
+		X:        player.X,
+		Y:        player.Y,
+		PlayerId: player.Id,
+	}
+	moveMsg := structs.ClientMsg{
+		MsgType: "move",
+		MsgData: newMove,
+	}
+	// //Send grid size to all players
+	for _, p := range playerList {
+		//Send grid size to player
+		err := p.Conn.WriteJSON(moveMsg)
+		if err != nil {
+			//Deal with error
+			continue
+		}
+	}
 }
 
 func cors(w http.ResponseWriter, r *http.Request) bool {

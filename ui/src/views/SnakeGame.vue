@@ -21,12 +21,6 @@
     <v-container>
         <div class="container">
 
-            <v-btn color="green-lighten-3" @click="update">Change name</v-btn>
-            <v-text-field
-                    v-model="this.snake.name"
-            />
-            
-                
             <v-container class="grid">
                 <v-row v-for="column, row in grid" :key="row">
                     <v-col v-for="cell, i in column" :key="i" class="gridCell" :id="[row + '-' + i]">
@@ -35,13 +29,12 @@
                 </v-row>
             </v-container>
 
-
         </div>
     </v-container>
 </template>
 
 <script>
-    import {changeName, initBoard} from '@/http/http';
+    import {getGridSize} from '@/http/http';
     export default {
 
         name: 'App',
@@ -60,14 +53,16 @@
                 y: 0,
                 other: null,
             },
+
             connected: false,
             wscon: WebSocket.prototype,
+            msg: {
+                msgdata: null,
+                masgtype: null,
+            }
         }),
         mounted: function () {
-            
             this.joinGame()
-            this.getSize()
-
             
             // add an event listener for keypress
             window.addEventListener('keydown', this.handleKeyPress)
@@ -78,31 +73,12 @@
             handleKeyPress: function (e) {
                 const keyCode = String(e.key).toLowerCase();
                 if (keyCode == "arrowup" || keyCode == "arrowdown" || keyCode == "arrowleft" || keyCode == "arrowright"){
-                    this.update(keyCode)
+                    this.keyPress(keyCode)
                 }
-            },
-            //Send update request to backend
-            update: async function(dir) {
-                this.snake.direction = dir
-                changeName(this.snake)
-                    //HTTP response
-                    .then((response)=>{
-                        //Set previous to white
-                        document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
-
-                        //Set snake to S
-                        this.snake.x = response.x;
-                        this.snake.y = response.y;
-                        this.grid[this.snake.y][this.snake.x] = "S"
-                        //Set current to red
-                        document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "red";
-                    })
-                    .catch(()=>{console.log("Something went wrong")})
-                    .finally()
             },
             getSize: async function(){
                 //
-                initBoard()
+                getGridSize()
                     .then((response)=>{
                         this.gridSize = response;
                     })
@@ -117,50 +93,101 @@
                         }
                     })
             },
-            joinGame(){
 
+            //Initiate websocket connection with server
+            joinGame(){
                 const host = process.env.NODE_ENV === 'development' ? "localhost:8080" : window.location.host;
-                const url = `ws://${host}/ws`
+                const url = `ws://${host}/newplayer`
 
                 this.wscon = new WebSocket( url );
-                //Console log for ws connection
-                // this.ws.addEventListener('open', (event) => { console.log("Connected :D") });
 
                 this.wscon.onclose = function() {
                     console.log("disconnected from ws!")
                 }
 
+                //Handle incoming message from server
                 this.wscon.onmessage = function(e){
-                    console.log(e.data)
                     this.handleMessage(e.data)
                 }.bind(this);
 
                 this.wscon.onerror = function(e){
-                    console.log("ERROR", e)
+                    console.log("ERROR", e) 
                 }
+
+                // this.ws.send(JSON.stringify({message: this.newMessage}));
             },
+            
+            //=============================================================
+            //=============================================================
+            //                  Server -> Player
+            //=============================================================
+            //=============================================================
+            
+            //Handle messages from backend websocket connection
             handleMessage(msg){
                 try{ msg = JSON.parse(msg) }catch(e){ return }
 
                 switch(msg.msgtype){
-                    case "initplayer": this.snake = msg.msgdata; break;
-                    case "move": this.updateOther(msg.msgdata); break;
-                    case "hola": console.log("hype"); break;
+                    case "move": this.playerMove(msg.msgdata); break;
+                    case "initgrid": this.initGrid(msg.msgdata); break;
+                    case "updategrid": this.updateGrid(msg.msgdata); break;
                     default:
                         // this.$refs.game.handleMessage(msg)
-                        console.log("def")
+                        console.log("default handlemessage vue")
                 }
             },
-            updateOther(data){
-                if (this.snake.id != data.other) {
-                    console.log("other")
+
+            initGrid(size){
+                this.gridSize = size
+                for(let y = 0; y < this.gridSize.y; y++){
+                    this.grid[y] = []
+                    for(let x = 0; x < this.gridSize.x; x++){
+                        this.grid[y][x] = "-"
+                    }
                 }
+            },
+            //CURRENTLY CLONE
+            updateGrid(size){
+                this.gridSize = size
+                for(let y = 0; y < this.gridSize.y; y++){
+                    this.grid[y] = []
+                    for(let x = 0; x < this.gridSize.x; x++){
+                        this.grid[y][x] = "-"
+                    }
+                }
+            },
+
+            //Move snake
+            playerMove(move){
+                //Previous cell
+                // document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
+                
+                this.snake.x = move.x
+                this.snake.y = move.y
+                //Set snake to S
+                this.grid[this.snake.y][this.snake.x] = move.playerid
+                //Set current to red
+                if(move.playerid %2 == 0){
+                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "blue";
+                } else {
+                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "red";
+                }
+            },
+
+            //=============================================================
+            //=============================================================
+            //                  Player -> Server
+            //=============================================================
+            //=============================================================
+
+            //When player hits an arrow key
+            keyPress(dir){
+                this.msg = {
+                    msgtype: "move",
+                    msgdata: dir
+                }
+                this.wscon.send(JSON.stringify(this.msg));
             }
         },
-        // created(){
-        //     //Request board size 
-        //     // this.joinGame()
-        //     this.getSize()        
-        // },
     }
 </script>

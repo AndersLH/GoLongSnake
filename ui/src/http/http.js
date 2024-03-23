@@ -18,6 +18,6 @@ startApi();
 
 //APIs
 // export const joinGame = (payload) => {return api.post('/joingame', payload)}
-export const changeName = (payload) => {return api.post('/start', payload)}
-export const initBoard = (payload) => {return api.get('/start', {payload})}
+// export const moveSnake = (payload) => {return api.post('/movesnake', payload)}
+export const getGridSize = (payload) => {return api.get('/getgridsize', {payload})}
 
