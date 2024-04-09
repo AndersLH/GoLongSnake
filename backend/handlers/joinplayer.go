@@ -70,7 +70,7 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 
 		startGrid := structs.ClientMsg{
 			MsgType: "updategrid",
-			MsgData: updatedGrid,
+			MsgData: gridSize,
 		}
 		//Send grid size to player
 		err := player.Conn.WriteJSON(startGrid)
