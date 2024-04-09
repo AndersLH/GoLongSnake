@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"dsproject/backend/structs"
-	"fmt"
 	"net/http"
 )
 
@@ -40,7 +39,6 @@ func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
 
 	//Collision detection
 	for _, p := range playerList {
-		fmt.Println(len(playerList), p.X, p.Y, player.X, player.Y)
 		if p.X == player.X && p.Y == player.Y && p.Id != player.Id {
 			player.X = ogX
 			player.Y = ogY

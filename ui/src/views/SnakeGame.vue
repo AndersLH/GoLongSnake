@@ -15,6 +15,7 @@
     border: 1px solid black;
     width: 40px;
     height: 40px;
+    /* border-radius: 10px; */
 }
 </style>
 <template>
@@ -34,7 +35,6 @@
 </template>
 
 <script>
-    import {getGridSize} from '@/http/http';
     export default {
 
         name: 'App',
@@ -43,10 +43,13 @@
             gridSize: {
                 x: 0,
                 y: 0,
-            }, 
+            },
+            playerColors: [],
             grid: [[]],
+            colors: ["red", "blue", "green", "yellow", "orange", "purple", "pink", "saddlebrown", "lime", "grey"],
             snake: {
                 username: "user01",
+                // color: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)],
                 id: null,
                 direction: "",
                 x: 0,
@@ -59,7 +62,8 @@
             msg: {
                 msgdata: null,
                 masgtype: null,
-            }
+            },
+            lostws: false,
         }),
         mounted: function () {
             this.joinGame()
@@ -75,23 +79,6 @@
                 if (keyCode == "arrowup" || keyCode == "arrowdown" || keyCode == "arrowleft" || keyCode == "arrowright"){
                     this.keyPress(keyCode)
                 }
-            },
-            getSize: async function(){
-                //
-                getGridSize()
-                    .then((response)=>{
-                        this.gridSize = response;
-                    })
-                    .catch(()=>{console.log("Something went wrong")})
-                    .finally(()=>{
-                        //Initialize board
-                        for(let y = 0; y < this.gridSize.y; y++){
-                            this.grid[y] = []
-                            for(let x = 0; x < this.gridSize.x; x++){
-                                this.grid[y][x] = "0"
-                            }
-                        }
-                    })
             },
 
             //Initiate websocket connection with server
@@ -111,10 +98,9 @@
                 }.bind(this);
 
                 this.wscon.onerror = function(e){
+                    this.lostws = true
                     console.log("ERROR", e) 
                 }
-
-                // this.ws.send(JSON.stringify({message: this.newMessage}));
             },
             
             //=============================================================
@@ -132,13 +118,13 @@
                     case "initgrid": this.initGrid(msg.msgdata); break;
                     case "updategrid": this.updateGrid(msg.msgdata); break;
                     default:
-                        // this.$refs.game.handleMessage(msg)
                         console.log("default handlemessage vue")
                 }
             },
 
             initGrid(size){
                 this.gridSize = size
+                this.snake.id = size.playerid
                 for(let y = 0; y < this.gridSize.y; y++){
                     this.grid[y] = []
                     for(let x = 0; x < this.gridSize.x; x++){
@@ -148,30 +134,50 @@
             },
             //CURRENTLY CLONE
             updateGrid(size){
+                
+
                 this.gridSize = size
+                this.snake.id = size.playerid
                 for(let y = 0; y < this.gridSize.y; y++){
                     this.grid[y] = []
                     for(let x = 0; x < this.gridSize.x; x++){
                         this.grid[y][x] = "-"
                     }
                 }
+
             },
 
             //Move snake
             playerMove(move){
                 //Previous cell
+                // if(move.playerid != this.snake.id){
+                // }
+                //Reset tail
                 // document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
+                // document.getElementById(this.snake.y+"-"+this.snake.x).innerHTML = "-"
                 
                 this.snake.x = move.x
                 this.snake.y = move.y
-                //Set snake to S
+                //Set snake to number
                 this.grid[this.snake.y][this.snake.x] = move.playerid
-                //Set current to red
-                if(move.playerid %2 == 0){
-                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "blue";
-                } else {
-                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "red";
+                //Set color from list, modulo to prevent out of index
+
+                //Set player color for themselves
+                if (move.playerid == this.snake.id){
+                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = this.colors[0];
                 }
+
+                //Set color of enemies
+                if (move.playerid != this.snake.id){
+                    if(move.playerid % 3 == 0){
+                        document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[3];
+                    } else if(move.playerid % 2 ==  1){
+                        document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[4];
+                    } else {
+                        document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[5];
+                    }
+                }
+        
             },
 
             //=============================================================

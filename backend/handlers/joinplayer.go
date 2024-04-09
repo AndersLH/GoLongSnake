@@ -25,6 +25,7 @@ var playerID = 0
 
 // List of players
 var playerList []*structs.Player
+var grid [][]string
 
 // Upgrade HTTP connection to websocket
 func NewPlayer(w http.ResponseWriter, r *http.Request) {
@@ -44,16 +45,17 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 	playerID += 1
 
 	//Set grid size
-	grid := structs.GridSize{
-		X: GRIDX,
-		Y: GRIDY,
+	gridSize := structs.GridSize{
+		X:        GRIDX,
+		Y:        GRIDY,
+		PlayerId: player.Id,
 	}
 	//On first player join, initiate grid with size
 	if len(playerList) == 1 {
 
 		startGrid := structs.ClientMsg{
 			MsgType: "initgrid",
-			MsgData: grid,
+			MsgData: gridSize,
 		}
 		//Send grid size to player
 		err := player.Conn.WriteJSON(startGrid)
@@ -61,10 +63,14 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 			return // Maybe do a retry / drop connection here
 		}
 	} else {
-		//If not first player, get board content
+		//If not first player, set board content for new player
+
+		//Send active players
+		//Frontend places? I dunno
+
 		startGrid := structs.ClientMsg{
 			MsgType: "updategrid",
-			MsgData: grid,
+			MsgData: updatedGrid,
 		}
 		//Send grid size to player
 		err := player.Conn.WriteJSON(startGrid)
@@ -85,7 +91,7 @@ func SocketListener(player *structs.Player) {
 		msg := structs.ClientMsg{}
 		err := player.Conn.ReadJSON(&msg)
 		if err != nil {
-			fmt.Println("errrrrr joinplayer.go")
+			fmt.Println("Error joinplayer.go userid:", player.Id)
 			fmt.Println(err)
 			//Remove player after losing connection
 			player.Conn.Close()

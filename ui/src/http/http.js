@@ -19,5 +19,5 @@ startApi();
 //APIs
 // export const joinGame = (payload) => {return api.post('/joingame', payload)}
 // export const moveSnake = (payload) => {return api.post('/movesnake', payload)}
-export const getGridSize = (payload) => {return api.get('/getgridsize', {payload})}
+
 

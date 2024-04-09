@@ -10,6 +10,7 @@ type Player struct {
 	X        int    `json:"x"`
 	Y        int    `json:"y"`
 	Done     bool
+	// Red string `json:"color"`
 }
 
 type PlayerMove struct {
@@ -25,6 +26,7 @@ type ClientMsg struct {
 
 // Grid size
 type GridSize struct {
-	X int `json:"x"`
-	Y int `json:"y"`
+	X        int `json:"x"`
+	Y        int `json:"y"`
+	PlayerId int `json:"playerid"`
 }
