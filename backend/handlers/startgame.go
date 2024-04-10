@@ -59,7 +59,10 @@ func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
 	newMove := structs.PlayerMove{
 		X:        player.X,
 		Y:        player.Y,
+		OldX:     ogX,
+		OldY:     ogY,
 		PlayerId: player.Id,
+		Dir:      player.Dir,
 	}
 	grid[player.Y][player.X] = player.Id
 	moveMsg := structs.ClientMsg{
@@ -76,7 +79,9 @@ func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
 	//Send grid size to all players
 	for _, p := range playerList {
 		//Send grid size to player
+		p.Lockmx.Lock()
 		err := p.Conn.WriteJSON(moveMsg)
+		p.Lockmx.Unlock()
 		if err != nil {
 			//Deal with error
 			continue

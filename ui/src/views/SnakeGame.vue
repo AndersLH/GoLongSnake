@@ -4,23 +4,45 @@
     width: 97%;
     margin: 20px;
     padding: 10px;
-    border: 1px solid black;
 }
 
 .grid{
     width: fit-content;
+    border: 10px solid black;
+    border-radius: 10px;
 }
 
 .gridCell{
-    border: 1px solid black;
-    width: 40px;
-    height: 40px;
-    /* border-radius: 10px; */
+    border: 1px solid rgba(237, 237, 237, 100);
+    width: 60px;
+    height: 60px;
+    border-radius: 5px;
+}
+
+.snakeHeadRight{
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-right: 2px solid black;
+}
+.snakeHeadLeft{
+    border-top-left-radius: 30px;
+    border-bottom-left-radius: 30px;
+    border-left: 2px solid black;
+}
+.snakeHeadDown{
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-bottom: 4px solid black;
+}
+.snakeHeadUp{
+    border-top-right-radius: 30px;
+    border-top-left-radius: 30px;
+    border-top: 4px solid black;
 }
 </style>
 <template>
     <v-container>
-        <div>{{this.snake.id}}</div>
+        <div>You are player: {{this.snake.id}}</div>
         <div class="container">
             <v-container class="grid">
                 <v-row v-for="column, row in grid" :key="row">
@@ -49,7 +71,6 @@
             colors: ["red", "blue", "green", "yellow", "orange", "purple", "pink", "saddlebrown", "lime", "grey"],
             snake: {
                 username: "user01",
-                // color: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)],
                 id: null,
                 direction: "",
                 x: 0,
@@ -77,17 +98,12 @@
             //Read keypress by user
             handleKeyPress: function (e) {
                 const keyCode = String(e.key).toLowerCase();
-                // if (keyCode == "arrowdown" || keyCode == "arrowleft" || keyCode == "arrowright"){
-                //     this.keyPress(keyCode)
-                // } else if (keyCode == "arrowup"){
-                //     console.log("up")
-                //     setInterval(this.keyUp, 1000)
-                // }
+                const timeint = 250;
                 switch (keyCode){
-                    case "arrowup": clearInterval(this.interval); this.interval = setInterval(this.keyUp, 1000); break; 
-                    case "arrowdown": clearInterval(this.interval); this.interval = setInterval(this.keyDown, 1000); break; 
-                    case "arrowright": clearInterval(this.interval); this.interval = setInterval(this.keyRight, 1000); break; 
-                    case "arrowleft": clearInterval(this.interval); this.interval = setInterval(this.keyLeft, 1000); break; 
+                    case "arrowup": clearInterval(this.interval); this.interval = setInterval(this.keyUp, timeint); break; 
+                    case "arrowdown": clearInterval(this.interval); this.interval = setInterval(this.keyDown, timeint); break; 
+                    case "arrowright": clearInterval(this.interval); this.interval = setInterval(this.keyRight, timeint); break; 
+                    case "arrowleft": clearInterval(this.interval); this.interval = setInterval(this.keyLeft, timeint); break; 
                 }
             },
 
@@ -139,7 +155,7 @@
                 for(let y = 0; y < this.gridSize.y; y++){
                     this.grid[y] = []
                     for(let x = 0; x < this.gridSize.x; x++){
-                        this.grid[y][x] = "-"
+                        this.grid[y][x] = " "
                     }
                 }
             },
@@ -154,10 +170,8 @@
                     for(let x = 0; x < upGrid.x; x++){
                         if(upGrid.grid[y][x] != 0){
                             this.grid[y][x] = upGrid.grid[y][x]
-                            //Add color
-                            // document.getElementById(y+"-"+x).style.backgroundColor = "red" //this.colors[move.playerid % 10];
                         } else {
-                            this.grid[y][x] = "-"
+                            this.grid[y][x] = " "
                         }
                     }
                 }
@@ -165,25 +179,36 @@
 
             //Move snake
             playerMove(move){
-                //Reset tail
-                // document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
-                // document.getElementById(this.snake.y+"-"+this.snake.x).innerHTML = "-"
                 
-                this.snake.x = move.x
-                this.snake.y = move.y
                 //Set snake to number
-                this.grid[this.snake.y][this.snake.x] = move.playerid
+                this.grid[move.y][move.x] = move.playerid
+
+                document.getElementById(move.oldy+"-"+move.oldx).classList.remove("snakeHeadUp");
+                document.getElementById(move.oldy+"-"+move.oldx).classList.remove("snakeHeadDown");
+                document.getElementById(move.oldy+"-"+move.oldx).classList.remove("snakeHeadRight");
+                document.getElementById(move.oldy+"-"+move.oldx).classList.remove("snakeHeadLeft");
+
+                switch (move.dir){
+                    case "u": document.getElementById(move.y+"-"+move.x).classList.add("snakeHeadUp"); break;
+                    case "d": document.getElementById(move.y+"-"+move.x).classList.add("snakeHeadDown"); break;
+                    case "r": document.getElementById(move.y+"-"+move.x).classList.add("snakeHeadRight"); break;
+                    case "l": document.getElementById(move.y+"-"+move.x).classList.add("snakeHeadLeft"); break;
+
+                }
 
                 //Set player color for themselves
                 if (move.playerid == this.snake.id){
-                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "cyan";
+                    //Color of snake
+                    document.getElementById(move.y+"-"+move.x).style.backgroundColor = "cyan";
                 }
 
                 //Set color of enemies
                 if (move.playerid != this.snake.id){
-                    //Set color of enemies, (currently loops which isnt great)
+                    //Set color of enemy snakes, (currently loops which isnt great)
                     document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[move.playerid % 10];
                 }
+
+                
         
             },
 
@@ -199,6 +224,7 @@
 
             //When player hits an arrow key
             keyUp(){
+                this.snake.direction = "u"
                 this.msg = {
                     msgtype: "move",
                     msgdata: "arrowup"
@@ -207,6 +233,7 @@
                 this.wscon.send(JSON.stringify(this.msg));
             },
             keyDown(){
+                this.snake.direction = "d"
                 this.msg = {
                     msgtype: "move",
                     msgdata: "arrowdown"
@@ -215,6 +242,7 @@
                 this.wscon.send(JSON.stringify(this.msg));
             },
             keyRight(){
+                this.snake.direction = "r"
                 this.msg = {
                     msgtype: "move",
                     msgdata: "arrowright"
@@ -223,6 +251,7 @@
                 this.wscon.send(JSON.stringify(this.msg));
             },
             keyLeft(){
+                this.snake.direction = "l"
                 this.msg = {
                     msgtype: "move",
                     msgdata: "arrowleft"

@@ -1,6 +1,10 @@
 package structs
 
-import "github.com/gorilla/websocket"
+import (
+	"sync"
+
+	"github.com/gorilla/websocket"
+)
 
 type Player struct {
 	// The actual websocket connection.
@@ -11,13 +15,17 @@ type Player struct {
 	Y        int    `json:"y"`
 	Dir      string `json:"dir"`
 	Done     bool
+	Lockmx   sync.Mutex
 	// Red string `json:"color"`
 }
 
 type PlayerMove struct {
-	X        int `json:"x"`
-	Y        int `json:"y"`
-	PlayerId int `json:"playerid"`
+	X        int    `json:"x"`
+	Y        int    `json:"y"`
+	OldX     int    `json:"oldx"`
+	OldY     int    `json:"oldy"`
+	Dir      string `json:"dir"`
+	PlayerId int    `json:"playerid"`
 }
 
 type ClientMsg struct {

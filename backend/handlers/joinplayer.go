@@ -99,7 +99,7 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 // Listen for messages from players
 func SocketListener(player *structs.Player) {
 	for !player.Done {
-		time.Sleep(time.Second)
+		time.Sleep(250 * time.Millisecond)
 		msg := structs.ClientMsg{}
 		err := player.Conn.ReadJSON(&msg)
 		if err != nil || gameFinished {
