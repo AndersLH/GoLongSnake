@@ -17,12 +17,16 @@ func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
 	switch msg.MsgData {
 	case "arrowup":
 		player.Y -= 1
+		player.Dir = "u"
 	case "arrowdown":
 		player.Y += 1
+		player.Dir = "d"
 	case "arrowright":
 		player.X += 1
+		player.Dir = "r"
 	case "arrowleft":
 		player.X -= 1
+		player.Dir = "l"
 	default:
 		return
 	}

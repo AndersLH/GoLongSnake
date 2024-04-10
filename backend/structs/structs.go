@@ -9,6 +9,7 @@ type Player struct {
 	Id       int    `json:"id"`
 	X        int    `json:"x"`
 	Y        int    `json:"y"`
+	Dir      string `json:"dir"`
 	Done     bool
 	// Red string `json:"color"`
 }

@@ -64,6 +64,8 @@
                 masgtype: null,
             },
             lostws: false,
+            canMove: true,
+            interval: null,
         }),
         mounted: function () {
             this.joinGame()
@@ -75,8 +77,17 @@
             //Read keypress by user
             handleKeyPress: function (e) {
                 const keyCode = String(e.key).toLowerCase();
-                if (keyCode == "arrowup" || keyCode == "arrowdown" || keyCode == "arrowleft" || keyCode == "arrowright"){
-                    this.keyPress(keyCode)
+                // if (keyCode == "arrowdown" || keyCode == "arrowleft" || keyCode == "arrowright"){
+                //     this.keyPress(keyCode)
+                // } else if (keyCode == "arrowup"){
+                //     console.log("up")
+                //     setInterval(this.keyUp, 1000)
+                // }
+                switch (keyCode){
+                    case "arrowup": clearInterval(this.interval); this.interval = setInterval(this.keyUp, 1000); break; 
+                    case "arrowdown": clearInterval(this.interval); this.interval = setInterval(this.keyDown, 1000); break; 
+                    case "arrowright": clearInterval(this.interval); this.interval = setInterval(this.keyRight, 1000); break; 
+                    case "arrowleft": clearInterval(this.interval); this.interval = setInterval(this.keyLeft, 1000); break; 
                 }
             },
 
@@ -187,13 +198,38 @@
             //=============================================================
 
             //When player hits an arrow key
-            keyPress(dir){
+            keyUp(){
                 this.msg = {
                     msgtype: "move",
-                    msgdata: dir
+                    msgdata: "arrowup"
                 }
+                
                 this.wscon.send(JSON.stringify(this.msg));
-            }
+            },
+            keyDown(){
+                this.msg = {
+                    msgtype: "move",
+                    msgdata: "arrowdown"
+                }
+                
+                this.wscon.send(JSON.stringify(this.msg));
+            },
+            keyRight(){
+                this.msg = {
+                    msgtype: "move",
+                    msgdata: "arrowright"
+                }
+                
+                this.wscon.send(JSON.stringify(this.msg));
+            },
+            keyLeft(){
+                this.msg = {
+                    msgtype: "move",
+                    msgdata: "arrowleft"
+                }
+                
+                this.wscon.send(JSON.stringify(this.msg));
+            },
         },
     }
 </script>

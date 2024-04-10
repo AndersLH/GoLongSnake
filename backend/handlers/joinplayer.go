@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -17,10 +18,10 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-const GRIDX int = 6
-const GRIDY int = 2
+const GRIDX int = 16
+const GRIDY int = 10
 
-var gameOn bool = false
+var gameOn bool = false //Start game, not implemented
 var gameFinished bool = false
 
 // Incrementing player id
@@ -97,16 +98,8 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 
 // Listen for messages from players
 func SocketListener(player *structs.Player) {
-	// newTime := time.Now().Add(time.Second)
 	for !player.Done {
-
-		// currentTime := time.Now()
-		// if newTime.Sub(currentTime) > 0 {
-		// 	continue
-		// } else {
-		// 	newTime = time.Now().Add(time.Second)
-		// }
-
+		time.Sleep(time.Second)
 		msg := structs.ClientMsg{}
 		err := player.Conn.ReadJSON(&msg)
 		if err != nil || gameFinished {
