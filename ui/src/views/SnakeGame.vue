@@ -20,8 +20,8 @@
 </style>
 <template>
     <v-container>
+        <div>{{this.snake.id}}</div>
         <div class="container">
-
             <v-container class="grid">
                 <v-row v-for="column, row in grid" :key="row">
                     <v-col v-for="cell, i in column" :key="i" class="gridCell" :id="[row + '-' + i]">
@@ -71,7 +71,6 @@
             // add an event listener for keypress
             window.addEventListener('keydown', this.handleKeyPress)
         },
-
         methods: {
             //Read keypress by user
             handleKeyPress: function (e) {
@@ -117,6 +116,7 @@
                     case "move": this.playerMove(msg.msgdata); break;
                     case "initgrid": this.initGrid(msg.msgdata); break;
                     case "updategrid": this.updateGrid(msg.msgdata); break;
+                    case "finished": this.finishedGame(msg.msgdata); break;
                     default:
                         console.log("default handlemessage vue")
                 }
@@ -133,25 +133,27 @@
                 }
             },
             //CURRENTLY CLONE
-            updateGrid(size){
-                
+            updateGrid(upGrid){
 
-                this.gridSize = size
-                this.snake.id = size.playerid
-                for(let y = 0; y < this.gridSize.y; y++){
+                this.snake.id = upGrid.playerid
+
+                //Create updated grid for joining player
+                for(let y = 0; y < upGrid.y; y++){
                     this.grid[y] = []
-                    for(let x = 0; x < this.gridSize.x; x++){
-                        this.grid[y][x] = "-"
+                    for(let x = 0; x < upGrid.x; x++){
+                        if(upGrid.grid[y][x] != 0){
+                            this.grid[y][x] = upGrid.grid[y][x]
+                            //Add color
+                            // document.getElementById(y+"-"+x).style.backgroundColor = "red" //this.colors[move.playerid % 10];
+                        } else {
+                            this.grid[y][x] = "-"
+                        }
                     }
                 }
-
             },
 
             //Move snake
             playerMove(move){
-                //Previous cell
-                // if(move.playerid != this.snake.id){
-                // }
                 //Reset tail
                 // document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "white";
                 // document.getElementById(this.snake.y+"-"+this.snake.x).innerHTML = "-"
@@ -160,24 +162,22 @@
                 this.snake.y = move.y
                 //Set snake to number
                 this.grid[this.snake.y][this.snake.x] = move.playerid
-                //Set color from list, modulo to prevent out of index
 
                 //Set player color for themselves
                 if (move.playerid == this.snake.id){
-                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = this.colors[0];
+                    document.getElementById(this.snake.y+"-"+this.snake.x).style.backgroundColor = "cyan";
                 }
 
                 //Set color of enemies
                 if (move.playerid != this.snake.id){
-                    if(move.playerid % 3 == 0){
-                        document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[3];
-                    } else if(move.playerid % 2 ==  1){
-                        document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[4];
-                    } else {
-                        document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[5];
-                    }
+                    //Set color of enemies, (currently loops which isnt great)
+                    document.getElementById(move.y+"-"+move.x).style.backgroundColor = this.colors[move.playerid % 10];
                 }
         
+            },
+
+            finishedGame(msg){
+                console.log(msg.message)
             },
 
             //=============================================================

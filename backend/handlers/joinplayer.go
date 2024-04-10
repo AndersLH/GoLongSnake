@@ -17,15 +17,17 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-const GRIDX int = 16
-const GRIDY int = 10
+const GRIDX int = 6
+const GRIDY int = 2
+
+var gameOn bool = false
+var gameFinished bool = false
 
 // Incrementing player id
-var playerID = 0
+var playerID = 1
 
 // List of players
 var playerList []*structs.Player
-var grid [][]string
 
 // Upgrade HTTP connection to websocket
 func NewPlayer(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +55,10 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 	//On first player join, initiate grid with size
 	if len(playerList) == 1 {
 
+		fmt.Println(getGrid())
+		createGrid()
+		fmt.Println(getGrid())
+
 		startGrid := structs.ClientMsg{
 			MsgType: "initgrid",
 			MsgData: gridSize,
@@ -65,17 +71,21 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		//If not first player, set board content for new player
 
-		//Send active players
-		//Frontend places? I dunno
+		updatedGrid := structs.UpdatedStruct{
+			X:        GRIDX,
+			Y:        GRIDY,
+			Grid:     getGrid(),
+			PlayerId: player.Id,
+		}
 
 		startGrid := structs.ClientMsg{
 			MsgType: "updategrid",
-			MsgData: gridSize,
+			MsgData: updatedGrid,
 		}
 		//Send grid size to player
 		err := player.Conn.WriteJSON(startGrid)
 		if err != nil {
-			return // Maybe do a retry / drop connection here
+			return // Maybe do a retry or drop connection here
 		}
 	}
 
@@ -87,10 +97,19 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 
 // Listen for messages from players
 func SocketListener(player *structs.Player) {
+	// newTime := time.Now().Add(time.Second)
 	for !player.Done {
+
+		// currentTime := time.Now()
+		// if newTime.Sub(currentTime) > 0 {
+		// 	continue
+		// } else {
+		// 	newTime = time.Now().Add(time.Second)
+		// }
+
 		msg := structs.ClientMsg{}
 		err := player.Conn.ReadJSON(&msg)
-		if err != nil {
+		if err != nil || gameFinished {
 			fmt.Println("Error joinplayer.go userid:", player.Id)
 			fmt.Println(err)
 			//Remove player after losing connection
@@ -118,4 +137,8 @@ func messageHandler(player *structs.Player, msg *structs.ClientMsg) {
 		fmt.Println("default messagehandler")
 		break
 	}
+}
+
+func setGameFinished() {
+	gameFinished = true
 }

@@ -30,3 +30,14 @@ type GridSize struct {
 	Y        int `json:"y"`
 	PlayerId int `json:"playerid"`
 }
+
+type UpdatedStruct struct {
+	X        int     `json:"x"`
+	Y        int     `json:"y"`
+	Grid     [][]int `json:"grid"`
+	PlayerId int     `json:"playerid"`
+}
+
+type FinishedMsg struct {
+	Message string `json:"message"`
+}
