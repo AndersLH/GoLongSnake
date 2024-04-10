@@ -126,7 +126,7 @@ func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
 		}
 
 		finishStruct := structs.FinishedMsg{
-			Message: "Game over, the winner is " + strconv.Itoa(winner) + " with a score of " + strconv.Itoa(maxScore),
+			Message: "Game over, the winner is player " + strconv.Itoa(winner) + " with a score of " + strconv.Itoa(maxScore),
 		}
 
 		finishedMsg := structs.ClientMsg{

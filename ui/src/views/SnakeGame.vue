@@ -1,4 +1,8 @@
 <style>
+body{
+    overflow: hidden;
+}
+
 .container{
     height: fit-content;
     width: 97%;
@@ -10,6 +14,18 @@
     width: fit-content;
     border: 10px solid black;
     border-radius: 10px;
+    /* box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8); */
+    animation: rainbow 20s linear infinite alternate;
+}
+
+.playertitle{
+    text-align: center;
+    animation: rotate360 5s linear infinite, flashRainbow 10s infinite;
+    margin: 0px;
+    font-weight: bold;
+    font-size: 18px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    overflow:hidden;
 }
 
 .gridCell{
@@ -19,30 +35,100 @@
     border-radius: 5px;
 }
 
+@keyframes rotate360 {
+    0% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(30deg);
+    }
+    75%{
+        transform: rotate(-30deg);
+    }
+    100%{
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes flashRainbow {
+    0% {
+        color: violet;
+    }
+    15% {
+        color: orange;
+    }
+    30% {
+        color: yellow;
+    }
+    45% {
+        color: green;
+    }
+    60% {
+        color: blue;
+    }
+    85% {
+        color: indigo;
+    }
+    100% {
+        color: violet;
+    }
+}
+
+@keyframes rainbow {
+    0% {
+        box-shadow: 0px 0px 100px 50px violet;
+    }
+    15% {
+        box-shadow: 0px 0px 100px 50px orange;
+    }
+    30% {
+        box-shadow: 0px 0px 100px 50px yellow;
+    }
+    45% {
+        box-shadow: 0px 0px 100px 50px green;
+    }
+    60% {
+        box-shadow: 0px 0px 100px 50px blue;
+    }
+    85% {
+        box-shadow: 0px 0px 100px 50px indigo;
+    }
+    100% {
+        box-shadow: 0px 0px 100px 50px violet;
+    }
+}
+
 .snakeHeadRight{
     border-top-right-radius: 30px;
     border-bottom-right-radius: 30px;
     border-right: 2px solid black;
+    transition: all 0.25s ease;
 }
+
 .snakeHeadLeft{
     border-top-left-radius: 30px;
     border-bottom-left-radius: 30px;
     border-left: 2px solid black;
+    transition: all 0.25s ease;
 }
 .snakeHeadDown{
     border-bottom-left-radius: 30px;
     border-bottom-right-radius: 30px;
-    border-bottom: 4px solid black;
+    border-bottom: 2px solid black;
+    transition: all 0.25s ease;
 }
 .snakeHeadUp{
     border-top-right-radius: 30px;
     border-top-left-radius: 30px;
-    border-top: 4px solid black;
+    border-top: 2px solid black;
+    transition: all 0.25s ease;
+
 }
 </style>
 <template>
     <v-container>
-        <div>You are player: {{this.snake.id}}</div>
+        <div class="playertitle">Player {{this.snake.id}}</div>
+        <div>{{this.finishedmsg}}</div>
         <div class="container">
             <v-container class="grid">
                 <v-row v-for="column, row in grid" :key="row">
@@ -87,6 +173,8 @@
             lostws: false,
             canMove: true,
             interval: null,
+            finishedmsg: "",
+        
         }),
         mounted: function () {
             this.joinGame()
@@ -98,13 +186,15 @@
             //Read keypress by user
             handleKeyPress: function (e) {
                 const keyCode = String(e.key).toLowerCase();
-                const timeint = 250;
+                const timeint = 275;
                 switch (keyCode){
                     case "arrowup": clearInterval(this.interval); this.interval = setInterval(this.keyUp, timeint); break; 
                     case "arrowdown": clearInterval(this.interval); this.interval = setInterval(this.keyDown, timeint); break; 
                     case "arrowright": clearInterval(this.interval); this.interval = setInterval(this.keyRight, timeint); break; 
                     case "arrowleft": clearInterval(this.interval); this.interval = setInterval(this.keyLeft, timeint); break; 
                 }
+
+
             },
 
             //Initiate websocket connection with server
@@ -213,6 +303,7 @@
             },
 
             finishedGame(msg){
+                this.finishedmsg = msg.message
                 console.log(msg.message)
             },
 
