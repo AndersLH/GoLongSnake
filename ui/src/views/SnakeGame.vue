@@ -20,7 +20,7 @@ body{
 
 .playertitle{
     text-align: center;
-    animation: rotate360 5s linear infinite, flashRainbow 10s infinite;
+    animation: wiggle 5s linear infinite, flashRainbow 10s infinite;
     margin: 0px;
     font-weight: bold;
     font-size: 18px;
@@ -30,12 +30,12 @@ body{
 
 .gridCell{
     border: 1px solid rgba(237, 237, 237, 100);
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
     border-radius: 5px;
 }
 
-@keyframes rotate360 {
+@keyframes wiggle {
     0% {
         transform: rotate(0deg);
     }
@@ -101,26 +101,26 @@ body{
 .snakeHeadRight{
     border-top-right-radius: 30px;
     border-bottom-right-radius: 30px;
-    border-right: 2px solid black;
+    /* border-right: 2px solid black; */
     transition: all 0.25s ease;
 }
 
 .snakeHeadLeft{
     border-top-left-radius: 30px;
     border-bottom-left-radius: 30px;
-    border-left: 2px solid black;
+    /* border-left: 2px solid black; */
     transition: all 0.25s ease;
 }
 .snakeHeadDown{
     border-bottom-left-radius: 30px;
     border-bottom-right-radius: 30px;
-    border-bottom: 2px solid black;
+    /* border-bottom: 2px solid black; */
     transition: all 0.25s ease;
 }
 .snakeHeadUp{
     border-top-right-radius: 30px;
     border-top-left-radius: 30px;
-    border-top: 2px solid black;
+    /* border-top: 2px solid black; */
     transition: all 0.25s ease;
 
 }
@@ -271,7 +271,7 @@ body{
             playerMove(move){
                 
                 //Set snake to number
-                this.grid[move.y][move.x] = move.playerid
+                this.grid[move.y][move.x] = "";//move.playerid
 
                 document.getElementById(move.oldy+"-"+move.oldx).classList.remove("snakeHeadUp");
                 document.getElementById(move.oldy+"-"+move.oldx).classList.remove("snakeHeadDown");

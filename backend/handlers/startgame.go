@@ -108,7 +108,7 @@ func SnakeMove(player *structs.Player, msg *structs.ClientMsg) {
 		for _, p := range playerList {
 			countScore[p.Id] = 0
 		}
-
+		//Count score to each player
 		for x := range grid {
 			for y := range grid[x] {
 				countScore[grid[x][y]]++

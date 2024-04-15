@@ -3,7 +3,7 @@
         <v-main>
             <v-app-bar :elevation="2" rounded>
                 <v-app-bar-title >
-                    <v-btn variant="plain" :to="`/`">Snake</v-btn>
+                    <v-btn variant="plain" :to="`/`">Go-Long-Snake</v-btn>
                     <v-btn icon @click="toggleTheme"><v-icon>mdi-white-balance-sunny</v-icon></v-btn>
                 </v-app-bar-title>
             </v-app-bar> 

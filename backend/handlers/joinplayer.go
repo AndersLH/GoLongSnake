@@ -21,7 +21,7 @@ var upgrader = websocket.Upgrader{
 const GRIDX int = 16
 const GRIDY int = 10
 
-var gameOn bool = false //Start game, not implemented
+// var gameOn bool = false //Start game, not implemented
 var gameFinished bool = false
 
 // Incrementing player id
@@ -102,7 +102,20 @@ func SocketListener(player *structs.Player) {
 		time.Sleep(250 * time.Millisecond)
 		msg := structs.ClientMsg{}
 		err := player.Conn.ReadJSON(&msg)
-		if err != nil || gameFinished {
+
+		//Temporary game finished:
+		if gameFinished {
+			for _, p := range playerList {
+				fmt.Println("Gone ", p.Id)
+				p.Conn.Close()
+			}
+			playerList = playerList[:0]
+			createGrid()
+			gameFinished = false
+			return
+		}
+
+		if err != nil {
 			fmt.Println("Error joinplayer.go userid:", player.Id)
 			fmt.Println(err)
 			//Remove player after losing connection
