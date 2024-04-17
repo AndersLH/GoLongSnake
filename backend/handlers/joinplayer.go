@@ -18,10 +18,10 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-const GRIDX int = 16
-const GRIDY int = 10
+const GRIDX int = 6
+const GRIDY int = 3
 
-// var gameOn bool = false //Start game, not implemented
+var gameOn bool = false
 var gameFinished bool = false
 
 // Incrementing player id
@@ -46,19 +46,20 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 	}
 	playerList = append(playerList, &player)
 	playerID += 1
+	player.Leader = false
 
 	//Set grid size
 	gridSize := structs.GridSize{
-		X:        GRIDX,
-		Y:        GRIDY,
-		PlayerId: player.Id,
+		X:      GRIDX,
+		Y:      GRIDY,
+		Player: &player,
 	}
 	//On first player join, initiate grid with size
 	if len(playerList) == 1 {
-
-		fmt.Println(getGrid())
 		createGrid()
-		fmt.Println(getGrid())
+
+		//set first player leader
+		player.Leader = true
 
 		startGrid := structs.ClientMsg{
 			MsgType: "initgrid",
@@ -73,17 +74,16 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 		//If not first player, set board content for new player
 
 		updatedGrid := structs.UpdatedStruct{
-			X:        GRIDX,
-			Y:        GRIDY,
-			Grid:     getGrid(),
-			PlayerId: player.Id,
+			X:      GRIDX,
+			Y:      GRIDY,
+			Grid:   getGrid(),
+			Player: &player,
 		}
 
 		startGrid := structs.ClientMsg{
 			MsgType: "updategrid",
 			MsgData: updatedGrid,
 		}
-		//Send grid size to player
 		err := player.Conn.WriteJSON(startGrid)
 		if err != nil {
 			return // Maybe do a retry or drop connection here
@@ -98,26 +98,65 @@ func NewPlayer(w http.ResponseWriter, r *http.Request) {
 
 // Listen for messages from players
 func SocketListener(player *structs.Player) {
+
 	for !player.Done {
+		//Only allow leader to start game
+		for !gameOn {
+			if player.Leader {
+				break
+			}
+			msg := structs.ClientMsg{}
+			player.Conn.ReadJSON(&msg)
+		}
+		//Annonuce game started for players
+		if !player.Leader {
+			start := structs.ClientMsg{
+				MsgType: "announcestart",
+				MsgData: player,
+			}
+
+			err := player.Conn.WriteJSON(start)
+			if err != nil {
+				return // Maybe do a retry or drop connection here
+			}
+		}
+
 		time.Sleep(250 * time.Millisecond)
 		msg := structs.ClientMsg{}
 		err := player.Conn.ReadJSON(&msg)
 
 		//Temporary game finished:
 		if gameFinished {
+
+			createGrid() //reset grid
+			//Set grid size
 			for _, p := range playerList {
-				fmt.Println("Gone ", p.Id)
-				p.Conn.Close()
+				gridSize := structs.GridSize{
+					X:      GRIDX,
+					Y:      GRIDY,
+					Player: p,
+				}
+				startGrid := structs.ClientMsg{
+					MsgType: "initgrid",
+					MsgData: gridSize,
+				}
+				//Send grid size to player
+				err := p.Conn.WriteJSON(startGrid)
+				if err != nil {
+					return // Maybe do a retry / drop connection here
+				}
 			}
-			playerList = playerList[:0]
-			createGrid()
+			player.X = 0
+			player.Y = 0
+			gameOn = false
 			gameFinished = false
-			return
+			// return
 		}
 
 		if err != nil {
 			fmt.Println("Error joinplayer.go userid:", player.Id)
 			fmt.Println(err)
+
 			//Remove player after losing connection
 			player.Conn.Close()
 			for i, p := range playerList {
@@ -125,6 +164,21 @@ func SocketListener(player *structs.Player) {
 					playerList = append(playerList[:i], playerList[i+1:]...)
 				}
 			}
+
+			//Assign new leader if leader leaves
+			if len(playerList) > 0 && player.Leader {
+				playerList[0].Leader = true
+				newLeader := structs.ClientMsg{
+					MsgType: "newleader",
+					MsgData: player,
+				}
+
+				err := playerList[0].Conn.WriteJSON(newLeader)
+				if err != nil {
+					return // Maybe do a retry or drop connection here
+				}
+			}
+
 			break
 		}
 		messageHandler(player, &msg)
@@ -136,13 +190,21 @@ func messageHandler(player *structs.Player, msg *structs.ClientMsg) {
 
 	//Handle messages from players
 	switch msg.MsgType {
+	case "start":
+		startGame()
 	case "move":
+		fmt.Println(grid)
+		if !gameOn {
+			return
+		}
 		SnakeMove(player, msg)
-		break
 	default:
 		fmt.Println("default messagehandler")
-		break
 	}
+}
+
+func startGame() {
+	gameOn = true
 }
 
 func setGameFinished() {

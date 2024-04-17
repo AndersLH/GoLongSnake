@@ -16,6 +16,7 @@ type Player struct {
 	Dir      string `json:"dir"`
 	Done     bool
 	Lockmx   sync.Mutex
+	Leader   bool `json:"leader"`
 	// Red string `json:"color"`
 }
 
@@ -35,16 +36,16 @@ type ClientMsg struct {
 
 // Grid size
 type GridSize struct {
-	X        int `json:"x"`
-	Y        int `json:"y"`
-	PlayerId int `json:"playerid"`
+	X      int     `json:"x"`
+	Y      int     `json:"y"`
+	Player *Player `json:"player"`
 }
 
 type UpdatedStruct struct {
-	X        int     `json:"x"`
-	Y        int     `json:"y"`
-	Grid     [][]int `json:"grid"`
-	PlayerId int     `json:"playerid"`
+	X      int     `json:"x"`
+	Y      int     `json:"y"`
+	Grid   [][]int `json:"grid"`
+	Player *Player `json:"player"`
 }
 
 type FinishedMsg struct {

@@ -127,9 +127,11 @@ body{
 </style>
 <template>
     <v-container>
-        <div class="playertitle">Player {{this.snake.id}}</div>
-        <div>{{this.finishedmsg}}</div>
+        <div class="playertitle">Player {{this.snake.leader}}</div>
+        <div v-if="this.finished">{{this.finishedmsg}}</div>
+        <v-btn v-if="this.snake.leader && !this.gameOn" @click="startGame">start game</v-btn>
         <div class="container">
+            <div v-if="!this.gameOn && !this.snake.leader">Waiting for leader to start...</div>
             <v-container class="grid">
                 <v-row v-for="column, row in grid" :key="row">
                     <v-col v-for="cell, i in column" :key="i" class="gridCell" :id="[row + '-' + i]">
@@ -162,6 +164,7 @@ body{
                 x: 0,
                 y: 0,
                 other: null,
+                leader: false,
             },
 
             connected: false,
@@ -173,6 +176,8 @@ body{
             lostws: false,
             canMove: true,
             interval: null,
+            gameOn: false,
+            finished: false,
             finishedmsg: "",
         
         }),
@@ -230,6 +235,8 @@ body{
                 try{ msg = JSON.parse(msg) }catch(e){ return }
 
                 switch(msg.msgtype){
+                    case "newleader": console.log(this.snake.leader);this.snake.leader = true; console.log(this.snake.leader);break;
+                    case "announcestart": this.gameOn = true; this.finished = false; break;
                     case "move": this.playerMove(msg.msgdata); break;
                     case "initgrid": this.initGrid(msg.msgdata); break;
                     case "updategrid": this.updateGrid(msg.msgdata); break;
@@ -241,7 +248,20 @@ body{
 
             initGrid(size){
                 this.gridSize = size
-                this.snake.id = size.playerid
+                this.grid = [[]]
+                //Reset styling of cells
+                const gridCells = document.querySelectorAll('.gridCell');
+                gridCells.forEach(cell => {
+                    cell.style.backgroundColor = ""; 
+                    cell.classList.remove("snakeHeadLeft");
+                    cell.classList.remove("snakeHeadRight");
+                    cell.classList.remove("snakeHeadUp");
+                    cell.classList.remove("snakeHeadDown");
+        });
+
+                // this.finished = false
+                this.gameOn = false
+                this.snake = size.player
                 for(let y = 0; y < this.gridSize.y; y++){
                     this.grid[y] = []
                     for(let x = 0; x < this.gridSize.x; x++){
@@ -251,9 +271,7 @@ body{
             },
             //CURRENTLY CLONE
             updateGrid(upGrid){
-
-                this.snake.id = upGrid.playerid
-
+                this.snake = upGrid.player
                 //Create updated grid for joining player
                 for(let y = 0; y < upGrid.y; y++){
                     this.grid[y] = []
@@ -303,8 +321,9 @@ body{
             },
 
             finishedGame(msg){
+                this.finished = true
+                this.gameOn = false
                 this.finishedmsg = msg.message
-                console.log(msg.message)
             },
 
             //=============================================================
@@ -350,6 +369,16 @@ body{
                 
                 this.wscon.send(JSON.stringify(this.msg));
             },
+            startGame(){
+                this.gameOn = true
+                this.finished = false
+                this.msg = {
+                    msgtype: "start",
+                    msgdata: "start"
+                }
+                
+                this.wscon.send(JSON.stringify(this.msg));
+            }
         },
     }
 </script>
