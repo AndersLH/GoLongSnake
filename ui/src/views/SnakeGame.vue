@@ -127,7 +127,7 @@ body{
 </style>
 <template>
     <v-container>
-        <div class="playertitle">Player {{this.snake.leader}}</div>
+        <div class="playertitle">Player {{this.snake.id}}</div>
         <div v-if="this.finished">{{this.finishedmsg}}</div>
         <v-btn v-if="this.snake.leader && !this.gameOn" @click="startGame">start game</v-btn>
         <div class="container">
@@ -306,7 +306,7 @@ body{
 
                 //Set player color for themselves
                 if (move.playerid == this.snake.id){
-                    //Color of snake
+                    //Color of own snake
                     document.getElementById(move.y+"-"+move.x).style.backgroundColor = "cyan";
                 }
 

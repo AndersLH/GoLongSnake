@@ -18,8 +18,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-const GRIDX int = 6
-const GRIDY int = 3
+const GRIDX int = 16
+const GRIDY int = 10
 
 var gameOn bool = false
 var gameFinished bool = false
@@ -193,7 +193,6 @@ func messageHandler(player *structs.Player, msg *structs.ClientMsg) {
 	case "start":
 		startGame()
 	case "move":
-		fmt.Println(grid)
 		if !gameOn {
 			return
 		}
